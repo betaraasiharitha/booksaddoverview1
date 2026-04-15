@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Book Review Platform</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f7fb;
+  margin: 0;
+  color: #333;
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  padding: 20px;
+  background: #6c63ff;
+  color: white;
+}
+
+/* SEARCH */
+.search-container {
+  text-align: center;
+  margin: 20px;
+}
+
+.search-container input {
+  padding: 10px;
+  width: 300px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+}
+
+.search-container button {
+  padding: 10px;
+  border: none;
+  background: #6c63ff;
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* SEARCH RESULT */
+.result-box {
+  width: 60%;
+  margin: 20px auto;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+
+.star {
+  color: gold;
+  font-size: 18px;
+}
+
+/* SECTION TITLE */
+.section-title {
+  font-size: 24px;
+  margin-left: 20px;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 220px);
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 15px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+  transition: 0.3s;
+  cursor: pointer;
+  width: 196px;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+/* IMAGE */
+.card img {
+  width: 196px;
+  height: 257px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+  margin: 10% auto;
+  padding: 20px;
+  width: 50%;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+  transition: background 0.3s;
+}
+
+.close {
+  float: right;
+  cursor: pointer;
+}
+
+/* ADD REVIEW FORM */
+.form-container {
+  background: white;
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+
+.form-container h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #6c63ff;
+}
+
+.form-container input,
+.form-container textarea {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.form-container .stars-label {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #555;
+}
+
+.stars {
+  margin: 5px 0 15px;
+}
+
+.stars span {
+  font-size: 25px;
+  cursor: pointer;
+  color: gray;
+}
+
+.stars .active {
+  color: gold;
+}
+
+button.submit-btn {
+  background: #6c63ff;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📚 Book Review Platform</h1>
+</header>
+
+<!-- SEARCH -->
+<div class="search-container">
+  <input type="text" id="searchInput" placeholder="Search by title or author">
+  <button onclick="searchBook()">Search</button>
+</div>
+
+<div id="searchResult"></div>
+
+<h2 class="section-title">Recommended Books</h2>
+
+<!-- BOOK GRID -->
+<div class="grid" id="bookGrid"></div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content" id="modalContent">
+    <span class="close" onclick="closeModal()">✖</span>
+    <div id="modalDetails"></div>
+  </div>
+</div>
+
+<!-- ADD REVIEW FORM -->
+<div class="form-container">
+  <h2>Add Review</h2>
+  <input type="text" id="title" placeholder="Book Title">
+  <input type="text" id="author" placeholder="Author">
+  <input type="text" id="genre" placeholder="Genre">
+  <textarea id="review" placeholder="Write review"></textarea>
+
+  <div class="stars-label">Rating:</div>
+  <div class="stars" id="stars">
+    <span onclick="setRating(1)">★</span>
+    <span onclick="setRating(2)">★</span>
+    <span onclick="setRating(3)">★</span>
+    <span onclick="setRating(4)">★</span>
+    <span onclick="setRating(5)">★</span>
+  </div>
+
+  <button class="submit-btn" onclick="submitReview()">Submit</button>
+</div>
+
+<script>
+let rating = 0;
+
+const searchData = [
+  {title:"The Go Kart", author:"Ravi Kumar", genre:"Adventure", rating:4, review:"A thrilling ride full of excitement."},
+  {title:"The Dream", author:"Anjali Mehta", genre:"Inspirational", rating:5, review:"Motivating and inspiring story."},
+  {title:"Pray for Silence", author:"Linda Castillo", genre:"Thriller", rating:4, review:"Dark and gripping suspense."},
+  {title:"The Core", author:"Peter V. Brett", genre:"Fantasy", rating:5, review:"Epic and powerful ending."},
+  {title:"The Buggles", author:"David Foster", genre:"Sci-Fi", rating:3, review:"Creative but complex."},
+  {title:"The Bigfoot Mystery", author:"Paul Shipton", genre:"Mystery", rating:4, review:"Very interesting mystery!"},
+  {title:"Land of Letters", author:"Roderick Hunt and Paul Shipton", genre:"Education", rating:4, review:"Great for learning."},
+  {title:"The good morning", author:"Grace Allen Hogarth", genre:"Fiction", rating:3, review:"Nice and simple story."},
+  {title:"The New Year Race", author:"Harry Potter", genre:"Fiction", rating:4, review:"Fun to read."},
+  {title:"On The Stage", author:"Jerome K", genre:"Fiction", rating:4, review:"Good drama."},
+  {title:"Two Left Feet", author:"Kallei Embidgle", genre:"Comedy", rating:5, review:"Very funny book!"},  
+  {title:"A Lucky Find", author:"Alex Brychta", genre:"Sad", rating:4, review:"Emotional story."},
+  {title:"The Strange Old House", author:"Paul Shipton and Roderick Hunt", genre:"Thriller", rating:5, review:"Spooky and exciting."}
+];
+
+const books = [
+  {
+    title:"The Bigfoot Mystery",
+    author:"Paul Shipton",
+    genre:"Mystery",
+    image:"The Bigfoot Mystery.jpg",
+    link:"C:\\FSD\\The Bigfoot Mystery.jpg",
+    reviews:["Very interesting mystery!", "Loved the suspense"],
+    ratings:[4,5],
+    color:"#ffe0e0"
+  },
+  {
+    title:"Land of Letters",
+    author:"Roderick Hunt and Paul Shipton",
+    genre:"Education",
+    image:"Land of Letters.jpg",
+    link:"C:\Users\B.Haritha\Desktop\New folder (2)\Land of Letters.jpg.jpeg",
+    reviews:["Great for learning"],
+    ratings:[4],
+    color:"#e0f7ff"
+  },
+  {
+    title:"The good morning",
+    author:"Grace Allen Hogarth",
+    genre:"Fiction",
+    image:"The good morning.jpg",
+    link:"C:\Users\B.Haritha\Desktop\New folder (2)\The good morning.jpg.jpeg",
+    reviews:["Nice and simple story"],
+    ratings:[3],
+    color:"#f9f0ff"
+  },
+  {
+    title:"The New Year Race",
+    author:"Harry Potter",
+    genre:"Fiction",
+    image:"C:\Users\B.Haritha\Desktop\New folder (2)\The New Year Race.jpg.jpeg",
+    link:"C:\\FSD\\The New Year Race.jpg",
+    reviews:["Fun to read"],
+    ratings:[4],
+    color:"#fff7e0"
+  },
+  {
+    title:"On The Stage",
+    author:"Jerome K",
+    genre:"Fiction",
+    image:"On the Stage.jpg",
+    link:"C:\Users\B.Haritha\Desktop\New folder (2)\On the Stage.jpg.jpeg",
+    reviews:["Good drama"],
+    ratings:[4],
+    color:"#e0ffe0"
+  },
+  {
+    title:"Two Left Feet",
+    author:"Kallei Embidgle",
+    genre:"Comedy",
+    image:"Two Left Feet.jpg",
+    link:"C:\Users\B.Haritha\Desktop\New folder (2)\Two Left Feet.jpg.jpeg",
+    reviews:["Very funny book!"],
+    ratings:[5],
+    color:"#ffe0f0"
+  },
+  {
+    title:"A Lucky Find",
+    author:"Alex Brychta",
+    genre:"Sad",
+    image:"A Lucky Find.jpg",
+    link:"C:\Users\B.Haritha\Desktop\New folder (2)\A Lucky Find.jpg.jpeg",
+    reviews:["Emotional story"],
+    ratings:[4],
+    color:"#e0fff0"
+  },
+  {
+    title:"The Strange Old House",
+    author:"Paul Shipton and Roderick Hunt",
+    genre:"Thriller",
+    image:"The Strange Old House.jpg",
+    link:"C:\Users\B.Haritha\Desktop\New folder (2)\The Strange Old House.jpg.jpeg",
+    reviews:["Spooky and exciting"],
+    ratings:[5],
+    color:"#fff0e0"
+  }
+];
+
+/* LOAD BOOKS */
+function loadBooks() {
+  const grid = document.getElementById("bookGrid");
+  grid.innerHTML = "";
+
+  books.forEach(book => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <img src="${book.image}">
+      <h4>${book.title}</h4>
+    `;
+
+    card.onclick = () => openModal(book);
+    card.ondblclick = () => window.open(book.link, "_blank");
+
+    grid.appendChild(card);
+  });
+}
+
+loadBooks();
+
+/* SEARCH FUNCTION */
+function searchBook() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+
+  const found = searchData.find(b =>
+    b.title.toLowerCase().includes(input) ||
+    b.author.toLowerCase().includes(input)
+  );
+
+  if (found) {
+    let stars = "";
+    for (let i = 1; i <= 5; i++) {
+      stars += i <= found.rating ? "★" : "☆";
+    }
+
+    document.getElementById("searchResult").innerHTML = `
+      <div class="result-box">
+        <h3>${found.title}</h3>
+        <p><b>Author:</b> ${found.author}</p>
+        <p><b>Genre:</b> ${found.genre}</p>
+        <p><b>Rating:</b> <span class="star">${stars}</span></p>
+        <p><b>Review:</b> ${found.review}</p>
+      </div>
+    `;
+  } else {
+    document.getElementById("searchResult").innerHTML = "No book found";
+  }
+}
+
+/* MODAL */
+function openModal(book) {
+  const modalContent = document.getElementById("modalContent");
+  modalContent.style.background = book.color; // set soft color for each book
+
+  let stored = JSON.parse(localStorage.getItem(book.title));
+  let allReviews = stored ? stored.reviews : book.reviews;
+  let allRatings = stored ? stored.ratings : book.ratings;
+
+  let avg = allRatings.length
+    ? (allRatings.reduce((a,b)=>a+b)/allRatings.length).toFixed(1)
+    : "No ratings";
+
+  let reviewsHTML = allReviews.map(r => `<p>• ${r}</p>`).join("");
+
+  document.getElementById("modalDetails").innerHTML = `
+    <h2>${book.title}</h2>
+    <p><b>Author:</b> ${book.author}</p>
+    <p><b>Genre:</b> ${book.genre}</p>
+    <p><b>Average Rating:</b> ⭐ ${avg}</p>
+    <h4>Reviews:</h4>
+    ${reviewsHTML}
+  `;
+
+  document.getElementById("modal").style.display = "block";
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+/* RATING */
+function setRating(val) {
+  rating = val;
+  document.querySelectorAll("#stars span").forEach((s, i) => {
+    s.classList.toggle("active", i < val);
+  });
+}
+
+/* SUBMIT REVIEW */
+function submitReview() {
+  const title = document.getElementById("title").value;
+  const review = document.getElementById("review").value;
+
+  if (!title || !review || rating === 0) {
+    alert("Please fill all fields and select a rating");
+    return;
+  }
+
+  let data = JSON.parse(localStorage.getItem(title)) || {reviews:[], ratings:[]};
+  data.reviews.push(review);
+  data.ratings.push(rating);
+
+  localStorage.setItem(title, JSON.stringify(data));
+
+  alert("Review submitted successfully!");
+  document.getElementById("title").value = "";
+  document.getElementById("author").value = "";
+  document.getElementById("genre").value = "";
+  document.getElementById("review").value = "";
+  rating = 0;
+  document.querySelectorAll("#stars span").forEach(s => s.classList.remove("active"));
+}
+</script>
+
+</body>
+</html>
